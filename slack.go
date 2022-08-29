@@ -97,7 +97,7 @@ func OptionCookie(name, value string) func(*Client) {
 	return func(c *Client) {
 		c.cookies = append(c.cookies, &http.Cookie{
 			Name:    name,
-			Value:   value,
+			Value:   url.QueryEscape(value),
 			Path:    "/",
 			Domain:  ".slack.com",
 			Expires: time.Now().AddDate(10, 0, 0),

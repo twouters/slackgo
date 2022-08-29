@@ -140,6 +140,18 @@ type UserPresence struct {
 	LastActivity    JSONTime `json:"last_activity,omitempty"`
 }
 
+type ClientBootTeam struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	URL  string `json:"url"`
+}
+
+type ClientBootResponse struct {
+	Self User           `json:"self"`
+	Team ClientBootTeam `json:"team"`
+	SlackResponse
+}
+
 type UserIdentityResponse struct {
 	User UserIdentity `json:"user"`
 	Team TeamIdentity `json:"team"`
@@ -445,6 +457,31 @@ func (api *Client) SetUserPresenceContext(ctx context.Context, presence string) 
 
 	_, err := api.userRequest(ctx, "users.setPresence", values)
 	return err
+}
+
+// ClientBoot returns info needed to start a Slack client
+func (api *Client) ClientBoot() (*ClientBootResponse, error) {
+	return api.ClientBootContext(context.Background())
+}
+
+// ClientBootWithContext returns info needed to start a Slack client with a custom context
+func (api *Client) ClientBootContext(ctx context.Context) (response *ClientBootResponse, err error) {
+	values := url.Values{
+		"token":           {api.token},
+		"flannel_api_ver": {"4"},
+	}
+	response = &ClientBootResponse{}
+
+	err = api.postMethod(ctx, "client.boot", values, response)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := response.Err(); err != nil {
+		return nil, err
+	}
+
+	return response, nil
 }
 
 // GetUserIdentity will retrieve user info available per identity scopes
