@@ -103,11 +103,12 @@ func downloadFile(ctx context.Context, client httpClient, token string, download
 	return err
 }
 
-func formReq(ctx context.Context, endpoint string, values url.Values) (req *http.Request, err error) {
+func formReq(ctx context.Context, endpoint string, values url.Values, cookies []*http.Cookie) (req *http.Request, err error) {
 	if req, err = http.NewRequestWithContext(ctx, http.MethodPost, endpoint, strings.NewReader(values.Encode())); err != nil {
 		return nil, err
 	}
 
+	addCookies(req, cookies)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	return req, nil
 }

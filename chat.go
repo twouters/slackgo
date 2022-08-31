@@ -214,7 +214,7 @@ func (api *Client) SendMessageContext(ctx context.Context, channelID string, opt
 		response chatResponseFull
 	)
 
-	if req, parser, err = buildSender(api.endpoint, options...).BuildRequestContext(ctx, api.token, channelID); err != nil {
+	if req, parser, err = buildSender(api.endpoint, api.cookies, options...).BuildRequestContext(ctx, api.token, channelID); err != nil {
 		return "", "", "", err
 	}
 
@@ -237,12 +237,12 @@ func (api *Client) SendMessageContext(ctx context.Context, channelID string, opt
 // UnsafeApplyMsgOptions utility function for debugging/testing chat requests.
 // NOTE: USE AT YOUR OWN RISK: No issues relating to the use of this function
 // will be supported by the library.
-func UnsafeApplyMsgOptions(token, channel, apiurl string, options ...MsgOption) (string, url.Values, error) {
-	config, err := applyMsgOptions(token, channel, apiurl, options...)
+func UnsafeApplyMsgOptions(token, channel, apiurl string, cookies []*http.Cookie, options ...MsgOption) (string, url.Values, error) {
+	config, err := applyMsgOptions(token, channel, apiurl, cookies, options...)
 	return config.endpoint, config.values, err
 }
 
-func applyMsgOptions(token, channel, apiurl string, options ...MsgOption) (sendConfig, error) {
+func applyMsgOptions(token, channel, apiurl string, cookies []*http.Cookie, options ...MsgOption) (sendConfig, error) {
 	config := sendConfig{
 		apiurl:   apiurl,
 		endpoint: apiurl + string(chatPostMessage),
@@ -250,6 +250,7 @@ func applyMsgOptions(token, channel, apiurl string, options ...MsgOption) (sendC
 			"token":   {token},
 			"channel": {channel},
 		},
+		cookies: cookies,
 	}
 
 	for _, opt := range options {
@@ -261,10 +262,11 @@ func applyMsgOptions(token, channel, apiurl string, options ...MsgOption) (sendC
 	return config, nil
 }
 
-func buildSender(apiurl string, options ...MsgOption) sendConfig {
+func buildSender(apiurl string, cookies []*http.Cookie, options ...MsgOption) sendConfig {
 	return sendConfig{
 		apiurl:  apiurl,
 		options: options,
+		cookies: cookies,
 	}
 }
 
@@ -287,6 +289,7 @@ type sendConfig struct {
 	mode            sendMode
 	endpoint        string
 	values          url.Values
+	cookies         []*http.Cookie
 	attachments     []Attachment
 	metadata        SlackMetadata
 	blocks          Blocks
@@ -300,7 +303,7 @@ func (t sendConfig) BuildRequest(token, channelID string) (req *http.Request, _ 
 }
 
 func (t sendConfig) BuildRequestContext(ctx context.Context, token, channelID string) (req *http.Request, _ func(*chatResponseFull) responseParser, err error) {
-	if t, err = applyMsgOptions(token, channelID, t.apiurl, t.options...); err != nil {
+	if t, err = applyMsgOptions(token, channelID, t.apiurl, t.cookies, t.options...); err != nil {
 		return nil, nil, err
 	}
 
@@ -317,13 +320,14 @@ func (t sendConfig) BuildRequestContext(ctx context.Context, token, channelID st
 			deleteOriginal:  t.deleteOriginal,
 		}.BuildRequestContext(ctx)
 	default:
-		return formSender{endpoint: t.endpoint, values: t.values}.BuildRequestContext(ctx)
+		return formSender{endpoint: t.endpoint, values: t.values, cookies: t.cookies}.BuildRequestContext(ctx)
 	}
 }
 
 type formSender struct {
 	endpoint string
 	values   url.Values
+	cookies  []*http.Cookie
 }
 
 func (t formSender) BuildRequest() (*http.Request, func(*chatResponseFull) responseParser, error) {
@@ -331,7 +335,7 @@ func (t formSender) BuildRequest() (*http.Request, func(*chatResponseFull) respo
 }
 
 func (t formSender) BuildRequestContext(ctx context.Context) (*http.Request, func(*chatResponseFull) responseParser, error) {
-	req, err := formReq(ctx, t.endpoint, t.values)
+	req, err := formReq(ctx, t.endpoint, t.values, t.cookies)
 	return req, func(resp *chatResponseFull) responseParser {
 		return newJSONParser(resp)
 	}, err
