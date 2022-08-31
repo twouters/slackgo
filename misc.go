@@ -140,7 +140,7 @@ func parseResponseBody(body io.ReadCloser, intf interface{}, d Debug) error {
 	return json.Unmarshal(response, intf)
 }
 
-func postLocalWithMultipartResponse(ctx context.Context, client httpClient, method, fpath, fieldname, token string, values url.Values, intf interface{}, d Debug) error {
+func postLocalWithMultipartResponse(ctx context.Context, client httpClient, method, fpath, fieldname, token string, values url.Values, cookies []*http.Cookie, intf interface{}, d Debug) error {
 	fullpath, err := filepath.Abs(fpath)
 	if err != nil {
 		return err
@@ -151,10 +151,10 @@ func postLocalWithMultipartResponse(ctx context.Context, client httpClient, meth
 	}
 	defer file.Close()
 
-	return postWithMultipartResponse(ctx, client, method, filepath.Base(fpath), fieldname, token, values, file, intf, d)
+	return postWithMultipartResponse(ctx, client, method, filepath.Base(fpath), fieldname, token, values, cookies, file, intf, d)
 }
 
-func postWithMultipartResponse(ctx context.Context, client httpClient, path, name, fieldname, token string, values url.Values, r io.Reader, intf interface{}, d Debug) error {
+func postWithMultipartResponse(ctx context.Context, client httpClient, path, name, fieldname, token string, values url.Values, cookies []*http.Cookie, r io.Reader, intf interface{}, d Debug) error {
 	pipeReader, pipeWriter := io.Pipe()
 	wr := multipart.NewWriter(pipeWriter)
 	errc := make(chan error)
@@ -181,6 +181,7 @@ func postWithMultipartResponse(ctx context.Context, client httpClient, path, nam
 	}
 	req.Header.Add("Content-Type", wr.FormDataContentType())
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	addCookies(req, cookies)
 	resp, err := client.Do(req)
 
 	if err != nil {

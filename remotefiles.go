@@ -123,9 +123,9 @@ func (api *Client) AddRemoteFileContext(ctx context.Context, params RemoteFilePa
 		values.Add("indexable_file_contents", params.IndexableFileContents)
 	}
 	if params.PreviewImage != "" {
-		err = postLocalWithMultipartResponse(ctx, api.httpclient, api.endpoint+"files.remote.add", params.PreviewImage, "preview_image", api.token, values, response, api)
+		err = postLocalWithMultipartResponse(ctx, api.httpclient, api.endpoint+"files.remote.add", params.PreviewImage, "preview_image", api.token, values, api.cookies, response, api)
 	} else if params.PreviewImageReader != nil {
-		err = postWithMultipartResponse(ctx, api.httpclient, api.endpoint+"files.remote.add", "preview.png", "preview_image", api.token, values, params.PreviewImageReader, response, api)
+		err = postWithMultipartResponse(ctx, api.httpclient, api.endpoint+"files.remote.add", "preview.png", "preview_image", api.token, values, api.cookies, params.PreviewImageReader, response, api)
 	} else {
 		response, err = api.remoteFileRequest(ctx, "files.remote.add", values)
 	}
@@ -274,7 +274,7 @@ func (api *Client) UpdateRemoteFileContext(ctx context.Context, fileID string, p
 		values.Add("indexable_file_contents", params.IndexableFileContents)
 	}
 	if params.PreviewImageReader != nil {
-		err = postWithMultipartResponse(ctx, api.httpclient, api.endpoint+"files.remote.update", "preview.png", "preview_image", api.token, values, params.PreviewImageReader, response, api)
+		err = postWithMultipartResponse(ctx, api.httpclient, api.endpoint+"files.remote.update", "preview.png", "preview_image", api.token, values, api.cookies, params.PreviewImageReader, response, api)
 	} else {
 		response, err = api.remoteFileRequest(ctx, "files.remote.update", values)
 	}
