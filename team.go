@@ -22,6 +22,7 @@ type TeamInfo struct {
 	Domain      string                 `json:"domain"`
 	EmailDomain string                 `json:"email_domain"`
 	Icon        map[string]interface{} `json:"icon"`
+	URL         string                 `json:"url"`
 }
 
 type LoginResponse struct {
