@@ -408,7 +408,7 @@ func (rtm *RTM) receiveIncomingEvent(events chan json.RawMessage) error {
 	case len(event) == 0:
 		rtm.Debugln("Received empty event")
 	default:
-		rtm.Debugln("Incoming Event:", string(event))
+		//rtm.Debugln("Incoming Event:", string(event))
 		select {
 		case events <- event:
 		case <-rtm.disconnected:
