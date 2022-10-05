@@ -129,6 +129,8 @@ type Msg struct {
 	ReplaceOriginal bool   `json:"replace_original"`
 	DeleteOriginal  bool   `json:"delete_original"`
 
+	IsEphemeral bool `json:"is_ephemeral"`
+
 	// metadata
 	Metadata SlackMetadata `json:"metadata,omitempty"`
 
