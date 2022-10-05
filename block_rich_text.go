@@ -104,7 +104,8 @@ func (s RichTextSection) RichTextElementType() RichTextElementType {
 
 func (e *RichTextSection) UnmarshalJSON(b []byte) error {
 	var raw struct {
-		RawElements []json.RawMessage `json:"elements"`
+		Type        RichTextElementType `json:"type"`
+		RawElements []json.RawMessage   `json:"elements"`
 	}
 	if string(b) == "{}" {
 		return nil
@@ -155,7 +156,7 @@ func (e *RichTextSection) UnmarshalJSON(b []byte) error {
 		elems = append(elems, elem)
 	}
 	*e = RichTextSection{
-		Type:     RTESection,
+		Type:     raw.Type,
 		Elements: elems,
 	}
 	return nil
