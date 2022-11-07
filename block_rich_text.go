@@ -40,6 +40,8 @@ func (e *RichTextBlock) UnmarshalJSON(b []byte) error {
 		switch s.Type {
 		case RTESection, RTEPreformatted, RTEQuote:
 			elem = &RichTextSection{}
+		case RTEList:
+			elem = &RichTextList{}
 		default:
 			elems = append(elems, &RichTextUnknown{
 				Type: s.Type,
@@ -90,6 +92,16 @@ type RichTextUnknown struct {
 
 func (u RichTextUnknown) RichTextElementType() RichTextElementType {
 	return u.Type
+}
+
+type RichTextList struct {
+	Type     RichTextElementType `json:"type"`
+	Elements []RichTextSection   `json:"elements"`
+	Style    string              `json:"style"`
+}
+
+func (l RichTextList) RichTextElementType() RichTextElementType {
+	return l.Type
 }
 
 type RichTextSection struct {
