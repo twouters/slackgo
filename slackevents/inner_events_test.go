@@ -38,6 +38,120 @@ func TestAppUninstalled(t *testing.T) {
 	}
 }
 
+func TestFileChangeEvent(t *testing.T) {
+	rawE := []byte(`
+		{
+			"type": "file_change",
+			"file_id": "F1234567890",
+			"file": {
+				"id": "F1234567890"
+			}
+		}
+	`)
+
+	var e FileChangeEvent
+	if err := json.Unmarshal(rawE, &e); err != nil {
+		t.Fatal(err)
+	}
+	if e.Type != "file_change" {
+		t.Errorf("type should be file_change, was %s", e.Type)
+	}
+	if e.FileID != "F1234567890" {
+		t.Errorf("file ID should be F1234567890, was %s", e.FileID)
+	}
+	if e.File.ID != "F1234567890" {
+		t.Errorf("file.id should be F1234567890, was %s", e.File.ID)
+	}
+}
+
+func TestFileDeletedEvent(t *testing.T) {
+	rawE := []byte(`
+		{
+			"type": "file_deleted",
+			"file_id": "F1234567890",
+			"event_ts": "1234567890.123456"
+		}
+	`)
+
+	var e FileDeletedEvent
+	if err := json.Unmarshal(rawE, &e); err != nil {
+		t.Fatal(err)
+	}
+	if e.Type != "file_deleted" {
+		t.Errorf("type should be file_deleted, was %s", e.Type)
+	}
+	if e.FileID != "F1234567890" {
+		t.Errorf("file ID should be F1234567890, was %s", e.FileID)
+	}
+	if e.EventTimestamp != "1234567890.123456" {
+		t.Errorf("event timestamp should be 1234567890.123456, was %s", e.EventTimestamp)
+	}
+}
+
+func TestFileSharedEvent(t *testing.T) {
+	rawE := []byte(`
+		{
+			"type": "file_shared",
+			"channel_id": "C1234567890",
+			"file_id": "F1234567890",
+			"user_id": "U11235813",
+			"file": {
+				"id": "F1234567890"
+			},
+			"event_ts": "1234567890.123456"
+		}
+	`)
+
+	var e FileSharedEvent
+	if err := json.Unmarshal(rawE, &e); err != nil {
+		t.Fatal(err)
+	}
+	if e.Type != "file_shared" {
+		t.Errorf("type should be file_shared, was %s", e.Type)
+	}
+	if e.ChannelID != "C1234567890" {
+		t.Errorf("channel ID should be C1234567890, was %s", e.ChannelID)
+	}
+	if e.FileID != "F1234567890" {
+		t.Errorf("file ID should be F1234567890, was %s", e.FileID)
+	}
+	if e.UserID != "U11235813" {
+		t.Errorf("user ID should be U11235813, was %s", e.UserID)
+	}
+	if e.File.ID != "F1234567890" {
+		t.Errorf("file.id should be F1234567890, was %s", e.File.ID)
+	}
+	if e.EventTimestamp != "1234567890.123456" {
+		t.Errorf("event timestamp should be 1234567890.123456, was %s", e.EventTimestamp)
+	}
+}
+
+func TestFileUnsharedEvent(t *testing.T) {
+	rawE := []byte(`
+		{
+			"type": "file_unshared",
+			"file_id": "F1234567890",
+			"file": {
+				"id": "F1234567890"
+			}
+		}
+	`)
+
+	var e FileUnsharedEvent
+	if err := json.Unmarshal(rawE, &e); err != nil {
+		t.Fatal(err)
+	}
+	if e.Type != "file_unshared" {
+		t.Errorf("type should be file_shared, was %s", e.Type)
+	}
+	if e.FileID != "F1234567890" {
+		t.Errorf("file ID should be F1234567890, was %s", e.FileID)
+	}
+	if e.File.ID != "F1234567890" {
+		t.Errorf("file.id should be F1234567890, was %s", e.File.ID)
+	}
+}
+
 func TestGridMigrationFinishedEvent(t *testing.T) {
 	rawE := []byte(`
 			{
@@ -100,6 +214,34 @@ func TestLinkSharedEvent(t *testing.T) {
 	err := json.Unmarshal(rawE, &LinkSharedEvent{})
 	if err != nil {
 		t.Error(err)
+	}
+}
+
+func TestLinkSharedEvent_struct(t *testing.T) {
+	e := LinkSharedEvent{
+		Type:             "link_shared",
+		User:             "Uxxxxxxx",
+		TimeStamp:        "123456789.9876",
+		Channel:          "Cxxxxxx",
+		MessageTimeStamp: "123456789.9875",
+		ThreadTimeStamp:  "123456789.9876",
+		Links: []SharedLinks{
+			{Domain: "example.com", URL: "https://example.com/12345"},
+			{Domain: "example.com", URL: "https://example.com/67890"},
+			{Domain: "another-example.com", URL: "https://yet.another-example.com/v/abcde"},
+		},
+		EventTimestamp: "123456789.9876",
+	}
+	rawE, err := json.Marshal(e)
+	if err != nil {
+		t.Error(err)
+	}
+	expected := `{"type":"link_shared","user":"Uxxxxxxx","ts":"123456789.9876","channel":"Cxxxxxx",` +
+		`"message_ts":"123456789.9875","thread_ts":"123456789.9876","links":[{"domain":"example.com",` +
+		`"url":"https://example.com/12345"},{"domain":"example.com","url":"https://example.com/67890"},` +
+		`{"domain":"another-example.com","url":"https://yet.another-example.com/v/abcde"}],"event_ts":"123456789.9876"}`
+	if string(rawE) != expected {
+		t.Errorf("expected %s, but got %s", expected, string(rawE))
 	}
 }
 
