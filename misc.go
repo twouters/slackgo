@@ -73,6 +73,8 @@ func fileUploadReq(ctx context.Context, path string, values url.Values, r io.Rea
 	return req, nil
 }
 
+var SlackFileHTMLError = errors.New("Slack returned HTML page instead of file")
+
 func downloadFile(ctx context.Context, client httpClient, token string, downloadURL string, writer io.Writer, d Debug, cookies []*http.Cookie) error {
 	if downloadURL == "" {
 		return fmt.Errorf("received empty download URL")
@@ -96,6 +98,12 @@ func downloadFile(ctx context.Context, client httpClient, token string, download
 	err = checkStatusCode(resp, d)
 	if err != nil {
 		return err
+	}
+
+	// Workaround: Slack apparently sometimes returns a HTML page instead of the file, with a 200 status?
+	contentType := resp.Header.Get("Content-Type")
+	if contentType == "text/html" {
+		return SlackFileHTMLError
 	}
 
 	_, err = io.Copy(writer, resp.Body)
