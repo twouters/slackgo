@@ -42,7 +42,7 @@ type GroupRenameEvent struct {
 type GroupRenameInfo struct {
 	ID      string `json:"id"`
 	Name    string `json:"name"`
-	Created string `json:"created"`
+	Created int    `json:"created"`
 }
 
 // GroupHistoryChangedEvent represents the Group history changed event

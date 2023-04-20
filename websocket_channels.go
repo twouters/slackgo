@@ -70,3 +70,18 @@ type ChannelArchiveEvent ChannelInfoEvent
 
 // ChannelUnarchiveEvent represents the Channel unarchive event
 type ChannelUnarchiveEvent ChannelInfoEvent
+
+// ChannelUpdateEvent represents the Channel update event
+type ChannelUpdateEvent struct {
+	Channel        string            `json:"channel"`
+	Type           string            `json:"type"`
+	Updates        ChannelUpdateInfo `json:"updates"`
+	Timestamp      string            `json:"ts"`
+	EventTimestamp string            `json:"event_ts"`
+}
+
+// ChannelRenameInfo represents the information associated with a Channel rename event
+type ChannelUpdateInfo struct {
+	IsMpim    bool `json:"is_mpim"`
+	IsPrivate bool `json:"is_private"`
+}
