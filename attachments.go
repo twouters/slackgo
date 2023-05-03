@@ -91,10 +91,18 @@ type Attachment struct {
 
 	IsMsgUnfurl bool `json:"is_msg_unfurl,omitempty"`
 
-	MessageBlocks []Block `json:"message_blocks,omitempty"`
+	MessageBlocks []MessageBlocks `json:"message_blocks,omitempty"`
 
 	Footer     string `json:"footer,omitempty"`
 	FooterIcon string `json:"footer_icon,omitempty"`
 
 	Ts json.Number `json:"ts,omitempty"`
+}
+
+// MessageBlocks contains the embedded message in a forwarded attachment
+
+type MessageBlocks struct {
+	Message struct {
+		Blocks Blocks `json:"blocks"`
+	} `json:"message"`
 }
