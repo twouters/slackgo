@@ -89,7 +89,9 @@ type Attachment struct {
 	Actions    []AttachmentAction `json:"actions,omitempty"`
 	MarkdownIn []string           `json:"mrkdwn_in,omitempty"`
 
-	Blocks Blocks `json:"blocks,omitempty"`
+	IsMsgUnfurl bool `json:"is_msg_unfurl,omitempty"`
+
+	MessageBlocks Blocks `json:"message_blocks,omitempty"`
 
 	Footer     string `json:"footer,omitempty"`
 	FooterIcon string `json:"footer_icon,omitempty"`
