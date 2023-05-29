@@ -89,6 +89,7 @@ type File struct {
 	NumStars        int      `json:"num_stars"`
 	IsStarred       bool     `json:"is_starred"`
 	Shares          Share    `json:"shares"`
+	FileAccess      string   `json:"file_access"`
 }
 
 type Share struct {
