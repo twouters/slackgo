@@ -39,6 +39,25 @@ func (api *Client) SendAuthRevokeContext(ctx context.Context, token string) (*Au
 	return api.authRequest(ctx, "auth.revoke", values)
 }
 
+// SendAuthSignout signs out a user client
+func (api *Client) SendAuthSignout() (*SlackResponse, error) {
+	return api.SendAuthSignoutContext(context.Background())
+}
+
+// SendAuthSignout signs out a user client with context
+func (api *Client) SendAuthSignoutContext(ctx context.Context) (*SlackResponse, error) {
+	values := url.Values{
+		"token": {api.token},
+	}
+	response := &SlackResponse{}
+	err := api.postMethod(ctx, "auth.signout", values, response)
+	if err != nil {
+		return nil, err
+	}
+
+	return response, response.Err()
+}
+
 type listTeamsResponse struct {
 	Teams []Team `json:"teams"`
 	SlackResponse
