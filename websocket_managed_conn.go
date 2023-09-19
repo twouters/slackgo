@@ -38,7 +38,7 @@ func NewUnmappedError(ctxMsg, eventType string, raw json.RawMessage) *UnmappedEr
 
 // Error returns human-readable error message.
 func (u UnmappedError) Error() string {
-	return fmt.Sprintf("%s: Received unmapped event %q", u.ctxMsg, u.EventType)
+	return fmt.Sprintf("%s: Received unmapped event %q %s", u.ctxMsg, u.EventType, u.RawEvent)
 }
 
 // ManageConnection can be called on a Slack RTM instance returned by the
