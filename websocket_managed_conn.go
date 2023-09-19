@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/cookiejar"
 	stdurl "net/url"
 	"reflect"
 	"time"
@@ -194,39 +195,49 @@ func (rtm *RTM) connect(connectionCount int, useRTMStart bool) (*Info, *websocke
 // then it returns the  full information returned by the "rtm.start" method on the
 // slack API. Else it uses the "rtm.connect" method to connect
 func (rtm *RTM) startRTMAndDial(useRTMStart bool) (info *Info, _ *websocket.Conn, err error) {
-	var (
-		url string
-	)
-
+	// TODO replace rtm.connect with /api/client.boot
 	if useRTMStart {
 		rtm.Debugf("Starting RTM")
-		info, url, err = rtm.StartRTM()
+		info, _, err = rtm.StartRTM()
 	} else {
 		rtm.Debugf("Connecting to RTM")
-		info, url, err = rtm.ConnectRTM()
+		info, _, err = rtm.ConnectRTM()
 	}
-	if err != nil {
-		rtm.Debugf("Failed to start or connect to RTM: %s", err)
-		return nil, nil, err
+	// TODO replace hardcoded url with ???.getWebsocketURL
+	u := stdurl.URL{
+		Scheme: "wss",
+		Host:   "wss-primary.slack.com",
+		Path:   "/",
+		RawQuery: stdurl.Values{
+			"token": {rtm.token},
+			//"sync_desync":           {"1"},
+			//"slack_client":          {"desktop"},
+			//"start_args":            {"?agent=client&org_wide_aware=true&agent_version=1695088041&eac_cache_ts=true&cache_ts=0&name_tagging=true&only_self_subteams=true&connect_only=true&ms_latest=true"},
+			//"no_query_on_subscribe": {"1"},
+			//"flannel":               {"3"},
+			//"lazy_channels":         {"1"},
+			//"gateway_server":        {"...-1"},
+			//"batch_presence_aware":  {"1"},
+		}.Encode(),
 	}
 
-	// install connection parameters
-	u, err := stdurl.Parse(url)
-	if err != nil {
-		return nil, nil, err
-	}
-	u.RawQuery = rtm.connParams.Encode()
-	url = u.String()
-
-	rtm.Debugf("Dialing to websocket on url %s", url)
+	rtm.Debugf("Dialing to websocket on url %s", u.String())
 	// Only use HTTPS for connections to prevent MITM attacks on the connection.
 	upgradeHeader := http.Header{}
-	upgradeHeader.Add("Origin", "https://api.slack.com")
-	dialer := websocket.DefaultDialer
+	upgradeHeader.Add("Origin", "https://app.slack.com")
+	dialer := &websocket.Dialer{
+		Proxy:            http.ProxyFromEnvironment,
+		HandshakeTimeout: 45 * time.Second,
+	}
 	if rtm.dialer != nil {
 		dialer = rtm.dialer
 	}
-	conn, _, err := dialer.Dial(url, upgradeHeader)
+	if dialer.Jar == nil {
+		jar, _ := cookiejar.New(&cookiejar.Options{})
+		jar.SetCookies(&stdurl.URL{Host: "slack.com", Scheme: "https", Path: "/"}, rtm.cookies)
+		dialer.Jar = jar
+	}
+	conn, _, err := dialer.Dial(u.String(), upgradeHeader)
 	if err != nil {
 		rtm.Debugf("Failed to dial to the websocket: %s", err)
 		return nil, nil, err
